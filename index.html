@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schrittzähler & Kalorien-Tracker</title>
+    <title>Pedro's All-in-One App</title>
     <link rel="manifest" href="manifest.json">
     <script defer src="https://unpkg.com/@zxing/library@latest"></script>
     <script defer src="app.js"></script>
@@ -39,10 +39,13 @@
         button:hover {
             background-color: #0056b3;
         }
-        video {
-            width: 100%;
-            max-width: 400px;
+        .menu {
+            text-align: left;
+            background: #333;
+            color: white;
+            padding: 10px;
             border-radius: 10px;
+            margin-bottom: 15px;
         }
         .card {
             background: #fff;
@@ -55,34 +58,49 @@
 </head>
 <body>
     <div class="container">
-        <h1>Schrittzähler & Kalorien-Tracker</h1>
-        <div class="card">
-            <p id="steps">Schritte: 0</p>
+        <div class="menu">
+            <h2>Hallo, das ist die Website von Pedro!</h2>
+            <button onclick="showSection('steps')">Schrittzähler</button>
+            <button onclick="showSection('barcode')">Barcode-Scanner</button>
+            <button onclick="showSection('translator')">Übersetzer</button>
+        </div>
+        
+        <div id="steps" class="card">
+            <h2>Schrittzähler</h2>
+            <p id="step-count">Schritte: 0</p>
             <button onclick="trackSteps()">Schritte manuell hinzufügen</button>
         </div>
         
-        <div class="card">
+        <div id="barcode" class="card" style="display:none;">
             <h2>Barcode scannen</h2>
             <video id="scanner"></video>
             <button onclick="startScanner()">Barcode-Scanner starten</button>
-        </div>
-        
-        <div class="card">
             <h2>Gescannte Nährwerte</h2>
             <p id="nutrients">Noch keine Daten</p>
-        </div>
-        
-        <div class="card">
             <h2>Preisinfos</h2>
             <p id="price">Noch keine Daten</p>
+        </div>
+        
+        <div id="translator" class="card" style="display:none;">
+            <h2>Übersetzer</h2>
+            <input type="text" id="text-input" placeholder="Text eingeben...">
+            <button onclick="translateText()">Übersetzen</button>
+            <p id="translated-text">Übersetzung wird hier angezeigt...</p>
         </div>
     </div>
     
     <script>
+        function showSection(section) {
+            document.getElementById("steps").style.display = "none";
+            document.getElementById("barcode").style.display = "none";
+            document.getElementById("translator").style.display = "none";
+            document.getElementById(section).style.display = "block";
+        }
+
         let steps = 0;
         function trackSteps() {
             steps += 10;
-            document.getElementById("steps").innerText = "Schritte: " + steps;
+            document.getElementById("step-count").innerText = "Schritte: " + steps;
         }
 
         function startScanner() {
@@ -124,6 +142,17 @@
                     }
                 })
                 .catch(err => console.error("Fehler beim Abrufen der Daten", err));
+        }
+
+        function translateText() {
+            let text = document.getElementById("text-input").value;
+            if (!text) return;
+            fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=de|en`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("translated-text").innerText = data.responseData.translatedText;
+                })
+                .catch(err => console.error("Fehler beim Übersetzen", err));
         }
     </script>
 </body>
