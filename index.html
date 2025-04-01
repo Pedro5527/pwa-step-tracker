@@ -8,27 +8,80 @@
     <script defer src="https://unpkg.com/@zxing/library@latest"></script>
     <script defer src="app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        button { padding: 10px; margin-top: 10px; }
-        video { width: 100%; max-width: 400px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
-    <h1>Schrittzähler & Kalorien-Tracker</h1>
-    <p id="steps">Schritte: 0</p>
-    <button onclick="trackSteps()">Schritte manuell hinzufügen</button>
-    
-    <h2>Barcode scannen</h2>
-    <video id="scanner"></video>
-    <button onclick="startScanner()">Barcode-Scanner starten</button>
-    
-    <h2>Gescannte Nährwerte</h2>
-    <p id="nutrients">Noch keine Daten</p>
+    <div class="container">
+        <h1>Schrittzähler & Kalorien-Tracker</h1>
+        <div class="card">
+            <p id="steps">Schritte: 0</p>
+            <button onclick="trackSteps()">Schritte manuell hinzufügen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Barcode scannen</h2>
+            <video id="scanner"></video>
+            <button onclick="startScanner()">Barcode-Scanner starten</button>
+        </div>
+        
+        <div class="card">
+            <h2>Gescannte Nährwerte</h2>
+            <p id="nutrients">Noch keine Daten</p>
+        </div>
+        
+        <div class="card">
+            <h2>Preisinfos</h2>
+            <p id="price">Noch keine Daten</p>
+        </div>
+    </div>
     
     <script>
         let steps = 0;
         function trackSteps() {
-            steps += 10; // Beispielwert, in echter App mit Sensoren koppeln
+            steps += 10;
             document.getElementById("steps").innerText = "Schritte: " + steps;
         }
 
@@ -58,10 +111,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 1) {
+                        const productName = data.product.product_name || "Unbekannt";
+                        const calories = data.product.nutriments.energy_kcal || data.product.nutriments.energy_kcal_100g || "Keine Angabe";
+                        const price = data.product.stores_tags ? `Preisangabe vorhanden (nicht spezifisch für Kaufland/Rewe).` : "Keine Preisangaben";
+                        
                         document.getElementById("nutrients").innerText = 
-                            `Produkt: ${data.product.product_name}\nKalorien: ${data.product.nutriments.energy_kcal} kcal`;
+                            `Produkt: ${productName}\nKalorien: ${calories} kcal`;
+                        document.getElementById("price").innerText = `Preis: ${price}`;
                     } else {
                         document.getElementById("nutrients").innerText = "Produkt nicht gefunden.";
+                        document.getElementById("price").innerText = "Keine Preisinfos verfügbar.";
                     }
                 })
                 .catch(err => console.error("Fehler beim Abrufen der Daten", err));
