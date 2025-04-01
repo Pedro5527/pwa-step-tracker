@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schrittzähler & Kalorien-Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <script defer src="https://unpkg.com/@zxing/library@latest"></script>
+    <script defer src="app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        button { padding: 10px; margin-top: 10px; }
+        video { width: 100%; max-width: 400px; }
+    </style>
+</head>
+<body>
+    <h1>Schrittzähler & Kalorien-Tracker</h1>
+    <p id="steps">Schritte: 0</p>
+    <button onclick="trackSteps()">Schritte manuell hinzufügen</button>
+    
+    <h2>Barcode scannen</h2>
+    <video id="scanner"></video>
+    <button onclick="startScanner()">Barcode-Scanner starten</button>
+    
+    <h2>Gescannte Nährwerte</h2>
+    <p id="nutrients">Noch keine Daten</p>
+    
+    <script>
+        let steps = 0;
+        function trackSteps() {
+            steps += 10; // Beispielwert, in echter App mit Sensoren koppeln
+            document.getElementById("steps").innerText = "Schritte: " + steps;
+        }
+
+        function startScanner() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(stream => {
+                    let video = document.getElementById("scanner");
+                    video.srcObject = stream;
+                    video.play();
+                    scanBarcode(video);
+                })
+                .catch(err => console.error("Kamera-Zugriff verweigert", err));
+        }
+
+        function scanBarcode(video) {
+            const codeReader = new ZXing.BrowserMultiFormatReader();
+            codeReader.decodeFromVideoDevice(null, 'scanner', (result, err) => {
+                if (result) {
+                    document.getElementById("nutrients").innerText = "Barcode: " + result.text;
+                    fetchNutritionalInfo(result.text);
+                }
+            });
+        }
+
+        function fetchNutritionalInfo(barcode) {
+            fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 1) {
+                        document.getElementById("nutrients").innerText = 
+                            `Produkt: ${data.product.product_name}\nKalorien: ${data.product.nutriments.energy_kcal} kcal`;
+                    } else {
+                        document.getElementById("nutrients").innerText = "Produkt nicht gefunden.";
+                    }
+                })
+                .catch(err => console.error("Fehler beim Abrufen der Daten", err));
+        }
+    </script>
+</body>
+</html>
